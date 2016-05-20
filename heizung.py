@@ -1,4 +1,3 @@
-#!/usr/bin/python2.7
 from __future__ import print_function
 import os
 import glob
@@ -16,22 +15,22 @@ board_type = sys.argv[-1]
 
 global temp
 global soll
-soll = 17
 global now
 
+soll = 17 			# Solltemperatur setzen!
+raum = "1214" 			# Raumnummer setzen!
+
+d = datetime
 channels = [22, 18, 16, 15, 13, 11]
 #           G25 G24 G23 G22 G27 G17
 
-d = datetime
-
-raum = "1214"
-
-start = "6:30".split(":")
-end = "17:00"
+start = "6:30".split(":") 	# Fallback-Wert für die Startzeit
+end = "17:00" 			# Fallback-Wert für die Endzeit
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
 
+# setze Output der jeweiligen GPIO-Channel
 i = 0
 for pin in channels:
     if int(board_type) == 1 and i % 2 == 0:
@@ -55,30 +54,19 @@ def get_adc(channel):
         if 0 <= res[1] <= 3:
                 return ((((res[1] * 256) + res[2]) * 0.00322) * 3)
 
-def display(adc_temp, adc_co2):        # function handles the display of #####
+def display(adc_temp, adc_co2):
     global datetime
     global co2
     global temp
     temp = adc_temp * 5
-    datetime = (time.strftime("%Y-%m-%d ") + time.strftime("%H:%M:00"))
     co2 = adc_co2 * 200
+    datetime = (time.strftime("%Y-%m-%d ") + time.strftime("%H:%M:00"))
     print (time.strftime("%H:%M:%S",time.localtime()),';',"{0:04f}".format(adc_temp),';', temp,';', "{0:04f}".format(adc_co2),';',co2)
 
-def show_air_quality(co2):
-    if co2 < 650:
-        print("Gute Luft")
-
-
-    elif co2 in range(800):
-        print("Schlechtere Luftqualitaet")
-
-    elif co2 > 1000:
-        print("Fenster auf")
-
-def write_data_to_db(temp,co2,datetime):
+def write_data_to_db(temp, co2):
    print("writing data to DB...")
    try:
-	conn = MySQLdb.connect(host="10.16.103.202",user="r1214",passwd="BGyPLrtGyVZG8Vyj",db="messung")
+	conn = MySQLdb.connect(host="domain.tld",user="Username",passwd="Passwort",db="Datenbank")
         cur = conn.cursor()
         sql = ("""INSERT INTO temp (room,temp,co2,soll) VALUES (%s,%s,%s,%s)""", (raum,round(temp, 1),round(co2, 1),round(soll, 1)))
 	cur.execute(*sql)
@@ -106,7 +94,7 @@ def heizungAus():
             GPIO.output(pin, GPIO.LOW)
         i = i + 1
 
-def get_minutes(soll,temperatur):
+def get_minutes(soll, temperatur):
     global minutes_aus
     minutes_aus = 5 * (temperatur - soll) + 6
     print("soll:",soll)
@@ -145,9 +133,8 @@ sleep(60 * 5 * (int(board_type)-1) + 30)
 
 while True:
     setSollTemperatur()
-    adc_temp = (get_adc(0))
-    adc_co2 = (get_adc(1))
-    display(adc_temp,adc_co2)
-    write_data_to_db(temp,co2,datetime)
-    show_air_quality(co2)
-    get_minutes(soll,temp)
+    adc_temp = (get_adc(0)) 	# hole Rohdaten für Temperatur
+    adc_co2 = (get_adc(1))	# hole Rohdaten für Co2-Werte
+    display(adc_temp,adc_co2)	# umrechnen der Rohdaten
+    write_data_to_db(temp,co2)	# schreibe Werte in Datenbank
+    get_minutes(soll,temp)	# setze Intervalwartezeit
