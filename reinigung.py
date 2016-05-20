@@ -5,7 +5,7 @@ from time import sleep
 import subprocess
 import os
 
-raum = "1214"
+raum = "1214"	# setze Raumnummer!
 d = datetime
 
 # jeweils 5 min am ende vor
