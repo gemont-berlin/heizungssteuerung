@@ -24,8 +24,8 @@ d = datetime
 channels = [22, 18, 16, 15, 13, 11]
 #           G25 G24 G23 G22 G27 G17
 
-start = "6:30".split(":") 	# Fallback-Wert für die Startzeit
-end = "17:00" 			# Fallback-Wert für die Endzeit
+start = "6:30".split(":") 	# Fallback-Wert fuer die Startzeit
+end = "17:00" 			# Fallback-Wert fuer die Endzeit
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
@@ -115,13 +115,16 @@ def setSollTemperatur():
     now = d.datetime.now().time()
     if d.datetime.now().strftime("%a") != "Sat" and d.datetime.now().strftime("%a") != "Sun":
         if raum != "1202":
-            arr = subprocess.check_output(["curl", "--silent", "http://belegung.gemont.de"]).split("<br>")
-            for room in arr:
-                if room.split(";")[0] == raum:
-                    if room.split(";")[1] == "-1" or room.split(";")[2] == "-1":
-                        end = "17:00"
-                    else:
-                        end = room.split(";")[1] + ":" + room.split(";")[2]
+            try:
+            	arr = subprocess.check_output(["curl", "--silent", "http://belegung.gemont.de"]).split("<br>")
+        	    for room in arr:
+    	        	if room.split(";")[0] == raum:
+    	                	if room.split(";")[1] == "-1" or room.split(";")[2] == "-1":
+    	                		end = "17:00"
+    	                	else:
+    	                        end = room.split(";")[1] + ":" + room.split(";")[2]
+    	    except: 
+    		    end = "17:00"
         if d.time(int(start[0]),int(start[1])) <= now and now <= d.time(int(end.split(":")[0]),int(end.split(":")[1])):
             soll = 21
         else:
@@ -133,8 +136,8 @@ sleep(60 * 5 * (int(board_type)-1) + 30)
 
 while True:
     setSollTemperatur()
-    adc_temp = (get_adc(0)) 	# hole Rohdaten für Temperatur
-    adc_co2 = (get_adc(1))	# hole Rohdaten für Co2-Werte
+    adc_temp = (get_adc(0)) 	# hole Rohdaten fuer Temperatur
+    adc_co2 = (get_adc(1))	# hole Rohdaten fuer Co2-Werte
     display(adc_temp,adc_co2)	# umrechnen der Rohdaten
     write_data_to_db(temp,co2)	# schreibe Werte in Datenbank
     get_minutes(soll,temp)	# setze Intervalwartezeit
