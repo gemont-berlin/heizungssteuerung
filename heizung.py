@@ -117,12 +117,12 @@ def setSollTemperatur():
         if raum != "1202":
             try:
             	arr = subprocess.check_output(["curl", "--silent", "http://belegung.gemont.de"]).split("<br>")
-        	    for room in arr:
+        	for room in arr:
     	        	if room.split(";")[0] == raum:
     	                	if room.split(";")[1] == "-1" or room.split(";")[2] == "-1":
     	                		end = "17:00"
     	                	else:
-    	                        end = room.split(";")[1] + ":" + room.split(";")[2]
+    	                	        end = room.split(";")[1] + ":" + room.split(";")[2]
     	    except: 
     		    end = "17:00"
         if d.time(int(start[0]),int(start[1])) <= now and now <= d.time(int(end.split(":")[0]),int(end.split(":")[1])):
